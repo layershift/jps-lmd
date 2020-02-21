@@ -4,6 +4,7 @@
 
 #Remove Maldetect
 
-
+cd /maldet*/files/
+sh uninstall.sh
 #Remove Claav
 yum -y remove clamav

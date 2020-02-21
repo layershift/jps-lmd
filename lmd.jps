@@ -37,11 +37,11 @@ menu:
     action: restartmaldet
   - caption: Start Maldetect
     loadingText: Starting..
-    confirmText: Are you sure you wish to restart Maldet?
+    confirmText: Are you sure you wish to start Maldet?
     action: startmaldet
   - caption: Stop Maldetect
     loadingText: Stopping..
-    confirmText: Are you sure you wish to restart Maldet?
+    confirmText: Are you sure you wish to stop Maldet?
     action: stopmaldet
   - caption: Configure
     loadingText: Updating..
@@ -108,21 +108,24 @@ actions:
 
   checkmaldet:
     - cmd [${globals.targetNodeId}]:
-        - service maldet status | grep active ;    
+        - service maldet status | grep active ;
+        - if [ $? -ne 0 ]; then echo "Maldet is stopped"; else echo "Maldet is active"; fi;
       user: root
     - return:
         type: success
         message: '${response.out}'
   startmaldet:
     - cmd [${globals.targetNodeId}]:
-        - service maldet start ;    
+        - service maldet start ;
+        - if [ $? -ne 0 ]; then echo "Failed to start Maldet. Please contact support"; else echo "Maldet started successfully"; fi;  
       user: root
     - return:
         type: success
         message: '${response.out}'
   stopmaldet:
     - cmd [${globals.targetNodeId}]:
-        - service maldet stop ;    
+        - service maldet stop ;
+        - if [ $? -ne 0 ]; then echo "Failed to stop Maldet. Please contact support"; else echo "Maldet stopped successfully"; fi; 
       user: root
     - return:
         type: success

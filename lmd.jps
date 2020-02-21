@@ -33,17 +33,17 @@ settings:
 menu:
   - caption: Restart Maldetect
     loadingText: Restarting..
-    confirmText: Are you sure you wish to restart Strongswan?
+    confirmText: Are you sure you wish to restart Maldet?
     action: restartmaldet
   - caption: Configure
     loadingText: Updating..
     settings: main
-    confirmText: Are you sure you wish to configure Strongswan?
+    confirmText: Are you sure you wish to configure Maldet?
     action: install
     successText: /text/success_configured.md
   - caption: Rebuild Config
     loadingText: Reconfiguring..
-    confirmText: Are you sure you wish to reconfigure Strongswan?
+    confirmText: Are you sure you wish to reconfigure Maldet?
     action: install
 
 buttons:

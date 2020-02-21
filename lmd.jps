@@ -1,0 +1,108 @@
+_info : 'https://docs.cloudscripting.com/1.6.2/'
+version: 1.6.2
+build: 20200109
+type: update
+name: 'lmd'
+id: 'lmd'
+homepage: https://github.com/layershift/jps-lmd
+baseUrl: https://raw.githubusercontent.com/layershift/jps-lmd/master
+logo: /images/lmd.png?_r=${fn.random}
+
+categories:
+ - apps/others
+
+description:
+  text: /texts/description.md
+  short: a malware scanner for Linux released under the GNU GPLv2 license.
+
+targetNodes:
+  nodeGroup:
+  - cp
+
+requiredFeatures: extip
+
+settings:
+  main:
+    fields:
+    - type: string
+      name: right
+      caption: Peer public IP (right)
+      hideLabel: false
+      required: true
+      default: 127.0.0.1
+menu:
+  - caption: Restart Maldetect
+    loadingText: Restarting..
+    confirmText: Are you sure you wish to restart Strongswan?
+    action: restartmaldet
+  - caption: Configure
+    loadingText: Updating..
+    settings: main
+    confirmText: Are you sure you wish to configure Strongswan?
+    action: install
+    successText: /text/success_configured.md
+  - caption: Rebuild Config
+    loadingText: Reconfiguring..
+    confirmText: Are you sure you wish to reconfigure Strongswan?
+    action: install
+
+buttons:
+  - caption: Status
+    loadingText: Checking..
+    action: checkmaldet
+
+globals:
+  targetNodeId:  ${nodes.cp.first.id}
+  targetNodeExtIp: ${nodes.cp.first.extIPs[0]}
+  targetNodeIntIp: ${nodes.cp.first.intIP}
+
+onAfterRedeployContainer:
+  install:
+    name: Install Action
+
+onInstall:
+  install:
+    name: Install Action
+
+onUninstall:
+  cmd [${globals.targetNodeId}]:
+    - wget -q -O - ${baseUrl}/scripts/uninstall.sh| bash
+  sayYes: true
+  user: root
+
+actions:
+  install:
+    - cmd [${globals.targetNodeId}]:
+       - wget -q -O - ${baseUrl}/scripts/install.sh| bash
+      sayYes: true
+      user: root
+    - if (response.out.indexOf("Issue") !== -1):
+        message:  ${response.out}
+        script: |
+          return {result: 2309, message: message.replace(/\n/g, '  \n')}
+
+  restartmaldet:
+    - cmd [${globals.targetNodeId}]:
+        - systemctl restart maldet 2>&1 > /dev/null;
+        - sleep 5;
+        - service maldet status | grep active 2>&1 > /dev/null;
+        - if [ $? -gt 0 ]; then service maldet status | grep active 2>&1 > /dev/null; fi;
+        - echo "";
+      user: root
+    - if (response.out.length > 0):
+        return:
+          type: error
+          message: '${response.out}'
+    - return:
+        type: success
+        message: 'Maldet restart complete'
+
+  checkmaldet:
+    - cmd [${globals.targetNodeId}]:
+        - service maldet status | grep active ;    
+      user: root
+    - return:
+        type: success
+        message: '$response.out'
+
+success: /texts/success.md

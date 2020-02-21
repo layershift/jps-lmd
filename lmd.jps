@@ -93,22 +93,17 @@ actions:
   restartmaldet:
     - cmd [${globals.targetNodeId}]:
         - service maldet restart 2>&1 > /dev/null;
-        - sleep 5;
+        - sleep 10;
         - service maldet status | grep active 2>&1 > /dev/null;
-        - if [ $? -gt 0 ]; then service maldet status | grep active 2>&1 > /dev/null; fi;
-        - echo "";
+        - if [ $? -ne 0 ]; then echo "Restart failed. Please contact support"; else echo "Restart complete!"; fi;
       user: root
-    - if (response.out.length > 0):
-        return:
-          type: error
-          message: '${response.out}'
     - return:
         type: success
-        message: 'Maldet restart complete'
+        message: '${response.out}'
 
   checkmaldet:
     - cmd [${globals.targetNodeId}]:
-        - service maldet status | grep active ;
+        - service maldet status 2> /dev/null| grep active 2>&1 > /dev/null;
         - if [ $? -ne 0 ]; then echo "Maldet is stopped"; else echo "Maldet is active"; fi;
       user: root
     - return:

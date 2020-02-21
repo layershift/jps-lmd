@@ -94,7 +94,7 @@ actions:
     - cmd [${globals.targetNodeId}]:
         - service maldet restart 2>&1 > /dev/null;
         - sleep 10;
-        - service maldet status | grep active 2>&1 > /dev/null;
+        - service maldet status 2>/de/null| grep active 2>&1 > /dev/null;
         - if [ $? -ne 0 ]; then echo "Restart failed. Please contact support"; else echo "Restart complete!"; fi;
       user: root
     - return:

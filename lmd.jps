@@ -74,6 +74,7 @@ actions:
   install:
     - cmd [${globals.targetNodeId}]:
        - wget -q -O - ${baseUrl}/scripts/install.sh| bash
+       - service maldet restart
       sayYes: true
       user: root
     - if (response.out.indexOf("Issue") !== -1):
@@ -83,7 +84,7 @@ actions:
 
   restartmaldet:
     - cmd [${globals.targetNodeId}]:
-        - systemctl restart maldet 2>&1 > /dev/null;
+        - service maldet restart 2>&1 > /dev/null;
         - sleep 5;
         - service maldet status | grep active 2>&1 > /dev/null;
         - if [ $? -gt 0 ]; then service maldet status | grep active 2>&1 > /dev/null; fi;
@@ -103,6 +104,6 @@ actions:
       user: root
     - return:
         type: success
-        message: '$response.out'
+        message: '${response.out}'
 
 success: /texts/success.md

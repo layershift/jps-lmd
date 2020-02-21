@@ -13,7 +13,7 @@ categories:
 
 description:
   text: /texts/description.md
-  short: a malware scanner for Linux released under the GNU GPLv2 license.
+  short: A malware scanner for Linux released under the GNU GPLv2 license.
 
 targetNodes:
   nodeGroup:
@@ -25,16 +25,24 @@ settings:
   main:
     fields:
     - type: string
-      name: right
-      caption: Peer public IP (right)
+      name: directory
+      caption: Directory you want to scan
       hideLabel: false
       required: true
-      default: 127.0.0.1
+      default: /var/www/webroot
 menu:
   - caption: Restart Maldetect
     loadingText: Restarting..
     confirmText: Are you sure you wish to restart Maldet?
     action: restartmaldet
+  - caption: Start Maldetect
+    loadingText: Starting..
+    confirmText: Are you sure you wish to restart Maldet?
+    action: startmaldet
+  - caption: Stop Maldetect
+    loadingText: Stopping..
+    confirmText: Are you sure you wish to restart Maldet?
+    action: stopmaldet
   - caption: Configure
     loadingText: Updating..
     settings: main
@@ -101,6 +109,20 @@ actions:
   checkmaldet:
     - cmd [${globals.targetNodeId}]:
         - service maldet status | grep active ;    
+      user: root
+    - return:
+        type: success
+        message: '${response.out}'
+  startmaldet:
+    - cmd [${globals.targetNodeId}]:
+        - service maldet start ;    
+      user: root
+    - return:
+        type: success
+        message: '${response.out}'
+  stopmaldet:
+    - cmd [${globals.targetNodeId}]:
+        - service maldet stop ;    
       user: root
     - return:
         type: success

@@ -1,6 +1,6 @@
 _info : 'https://docs.cloudscripting.com/1.6.2/'
 version: 1.6.2
-build: 20200109
+build: 20200306
 type: update
 name: 'lmd'
 id: 'lmd'
@@ -29,7 +29,7 @@ settings:
       caption: Directory you want to scan
       hideLabel: false
       required: true
-      default: /var/www/webroot/ROOT
+      default: /var/www/webroot
     - type: string
       name: email
       caption: Email address
@@ -89,9 +89,11 @@ actions:
   install:
     - cmd [${targetNodes.nodeGroup}]:
        - wget -q -O - ${baseUrl}/scripts/install.sh| bash;
+       - chmod 666 /usr/local/maldetect/conf.maldet;
        - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
-       - sed 's/email_addr=".*"/email_addr="me@dom.org"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/email_addr=".*"/email_addr="${settings.email}"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/scan_user_access=".*"/scan_user_access="1"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's#inotify_docroot=".*"#inotify_docroot="${settings.directory}"#g' -i /usr/local/maldetect/conf.maldet;
        - service maldet restart
        - curl -fsSL '${baseUrl}/scripts/sudo_lmd' -o /etc/sudoers.d/lmd;
        - chmod 640 /etc/sudoers.d/lmd;

@@ -46,9 +46,9 @@ menu:
     loadingText: Starting..
     confirmText: Are you sure you wish to start Maldet?
     action: startmaldet
-  - caption: Maintenance Scan
+  - caption: Monitoring Scan
     loadingText: Scanning
-    confirmText: Are you sure you wish to start Maldet maintenance scan?
+    confirmText: This will monitor the specified path for any files that are changed, and will scan those files. Do you wish to proceed?
     action: maintenance
   - caption: Configure
     loadingText: Updating..
@@ -127,7 +127,7 @@ actions:
         message: '${response.out}'
   maintenance:
     - cmd [${globals.targetNodeId}]:
-        - maldet -r 30 ${settings.directory} ;
+        - maldet -m ${settings.directory} ;
       user: root
     - return:
         type: success

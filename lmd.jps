@@ -81,15 +81,27 @@ onInstall:
 
 onUninstall:
   cmd [${globals.targetNodeId}]:
-    - wget -q -O - ${baseUrl}/scripts/uninstall.sh| bash
+    - cd /;
+    - echo "y" | /maldet*/files/uninstall.sh;
+    - yum -y remove clamav;
+    - rm -f /etc/sudoers.d/lmd;
+    - rm -f /etc/profile.d/profile_lmd.sh;
+
   sayYes: true
   user: root
 
 actions:
   install:
     - cmd [${globals.targetNodeId}]:
-       - wget -q -O - ${baseUrl}/scripts/install.sh| bash
+       - wget -q -O - ${baseUrl}/scripts/install.sh| bash;
+       - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/email_addr=".*"/email_addr="me@dom.org"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/scan_user_access=".*"/scan_user_access="1"/g' -i /usr/local/maldetect/conf.maldet;
        - service maldet restart
+       - curl -fsSL '${baseUrl}/scripts/sudo_lmd' -o /etc/sudoers.d/lmd;
+       - chmod 640 /etc/sudoers.d/lmd;
+       - curl -fsSL '${baseUrl}/scripts/profile_jps-lmd' -o /etc/profile.d/profile_lmd.sh;
+       - chmod +x /etc/profile.d/profile_lmd.sh;
       sayYes: true
       user: root
     - if (response.out.indexOf("Issue") !== -1):

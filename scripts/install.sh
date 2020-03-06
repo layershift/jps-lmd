@@ -6,7 +6,7 @@ function install_maldet ()
 {
     echo "Installing maldet on the `hostname` server"
     cd /
-    wget https://www.rfxn.com/downloads/maldetect-current.tar.gz
+    wget https://www.rfxn.com/downloads/maldetect-current.tar.gz -O /maldetect-current.tar.gz
     tar -xvf maldetect-current.tar.gz
     cd maldetect-* && sh install.sh
     echo "Maldet Installed Successfully!"

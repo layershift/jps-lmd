@@ -16,10 +16,10 @@ description:
   short: A malware scanner for Linux released under the GNU GPLv2 license.
 
 targetNodes:
-  nodeGroup:
-  - cp
+  nodeGroup: '*'
 
-requiredFeatures: extip
+globals:
+  message: ""
 
 settings:
   main:
@@ -66,11 +66,6 @@ buttons:
     loadingText: Checking..
     action: checkmaldet
 
-globals:
-  targetNodeId:  ${nodes.cp.first.id}
-  targetNodeExtIp: ${nodes.cp.first.extIPs[0]}
-  targetNodeIntIp: ${nodes.cp.first.intIP}
-
 onAfterRedeployContainer:
   install:
     name: Install Action
@@ -80,7 +75,7 @@ onInstall:
     name: Install Action
 
 onUninstall:
-  cmd [${globals.targetNodeId}]:
+  cmd [${targetNodes.nodeGroup}]:
     - cd /;
     - echo "y" | /maldet*/files/uninstall.sh;
     - yum -y remove clamav;
@@ -92,7 +87,7 @@ onUninstall:
 
 actions:
   install:
-    - cmd [${globals.targetNodeId}]:
+    - cmd [${targetNodes.nodeGroup}]:
        - wget -q -O - ${baseUrl}/scripts/install.sh| bash;
        - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/email_addr=".*"/email_addr="me@dom.org"/g' -i /usr/local/maldetect/conf.maldet;
@@ -110,7 +105,7 @@ actions:
           return {result: 2309, message: message.replace(/\n/g, '  \n')}
 
   restartmaldet:
-    - cmd [${globals.targetNodeId}]:
+    - cmd [${targetNodes.nodeGroup}]:
         - service maldet restart 2> /dev/null;
         - sleep 10;
         - service maldet status 2> /dev/null | grep active 2>&1 > /dev/null;
@@ -121,7 +116,7 @@ actions:
         message: '${response.out}'
 
   checkmaldet:
-    - cmd [${globals.targetNodeId}]:
+    - cmd [${targetNodes.nodeGroup}]:
         - service maldet status 2> /dev/null| grep active 2>&1 > /dev/null;
         - if [ $? -ne 0 ]; then echo "Maldet is stopped"; else echo "Maldet is active"; fi;
       user: root
@@ -129,7 +124,7 @@ actions:
         type: success
         message: '${response.out}'
   startmaldet:
-    - cmd [${globals.targetNodeId}]:
+    - cmd [${targetNodes.nodeGroup}]:
         - service maldet start ;
         - if [ $? -ne 0 ]; then echo "Failed to start Maldet. Please contact support"; else echo "Scan started successfully"; fi;  
         - maldet -b -a ${settings.directory} ;
@@ -138,7 +133,7 @@ actions:
         type: success
         message: '${response.out}'
   maintenance:
-    - cmd [${globals.targetNodeId}]:
+    - cmd [${targetNodes.nodeGroup}]:
         - maldet -m ${settings.directory} ;
       user: root
     - return:

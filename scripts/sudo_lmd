@@ -1,0 +1,3 @@
+Cmnd_Alias LMD = /usr/bin/systemctl restart maldet*, /usr/bin/systemctl stop maldet*, /usr/bin/systemctl start maldet*, /usr/bin/systemctl status maldet*, /usr/local/sbin/maldet *, /usr/sbin/service maldet *
+
+%ssh-access ALL = NOPASSWD: LMD

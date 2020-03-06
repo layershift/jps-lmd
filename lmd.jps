@@ -25,11 +25,16 @@ settings:
   main:
     fields:
     - type: string
-      name: directory
+      name: Directory
       caption: Directory you want to scan
       hideLabel: false
       required: true
       default: /var/www/webroot
+    - type: string
+      name: Email
+      hideLabel: false
+      required: true
+      default: ${user.email}
 menu:
   - caption: Restart Maldetect
     loadingText: Restarting..
@@ -112,7 +117,9 @@ actions:
   startmaldet:
     - cmd [${globals.targetNodeId}]:
         - service maldet start ;
-        - if [ $? -ne 0 ]; then echo "Failed to start Maldet. Please contact support"; else echo "Maldet started successfully"; fi;  
+        - if [ $? -ne 0 ]; then echo "Failed to start Maldet. Please contact support"; else echo "Scan started successfully"; fi;  
+        - maldet -a ${settings.Directory} ;
+        
       user: root
     - return:
         type: success

@@ -36,7 +36,14 @@ settings:
       hideLabel: false
       required: true
       default: ${user.email}
-
+  
+  single:
+    fields:
+    - type: string
+      name: second_directory
+      caption: Directory you want to scan
+      hideLabel: false
+      required: true
 menu:
   - caption: Restart Maldetect
     loadingText: Restarting..
@@ -46,10 +53,11 @@ menu:
     loadingText: Starting..
     confirmText: Are you sure you wish to start Maldet?
     action: startmaldet
-  - caption: Monitoring Scan
+  - caption: Scan a directory
     loadingText: Scanning
-    confirmText: This will monitor the specified path for any files that are changed, and will scan those files. Do you wish to proceed?
-    action: maintenance
+    settings: single
+    confirmText: This will scan the directory once. Do you wish to proceed?
+    action: scan_directory
   - caption: Configure
     loadingText: Updating..
     settings: main
@@ -134,9 +142,9 @@ actions:
     - return:
         type: success
         message: '${response.out}'
-  maintenance:
+  scan_directory:
     - cmd [${targetNodes.nodeGroup}]:
-        - maldet -m ${settings.directory} ;
+      - maldet -a ${settings.second_directory} ;
       user: root
     - return:
         type: success

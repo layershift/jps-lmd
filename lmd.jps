@@ -36,6 +36,10 @@ settings:
       hideLabel: false
       required: true
       default: ${user.email}
+    - type: toggle
+      name: autoQuarantine
+      caption: Auto Quarantine
+      value: false
 
 menu:
   - caption: Restart Maldetect
@@ -93,7 +97,11 @@ actions:
        - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/email_addr=".*"/email_addr="${settings.email}"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/scan_user_access=".*"/scan_user_access="1"/g' -i /usr/local/maldetect/conf.maldet;
-       - sed 's#inotify_docroot=".*"#inotify_docroot="${settings.directory}"#g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's#default_monitor_mode=".*"#default_monitor_mode="/usr/local/maldetect/monitor_paths"#g' -i /usr/local/maldetect/conf.maldet;
+       - echo "/tmp/" > /usr/local/maldetect/monitor_paths;
+       - echo "/var/tmp/" >> /usr/local/maldetect/monitor_paths
+       - echo "${settings.directory}" >> /usr/local/maldetect/monitor_paths
+       - if [ "{settings.autoQuarantine}" == "true" ]; then sed 's#quarantine_hits=".*"#quarantine_hits="1"#g' -i /usr/local/maldetect/conf.maldet; else sed 's#quarantine_hits=".*"#quarantine_hits="0"#g' -i /usr/local/maldetect/conf.maldet; fi;
        - service maldet restart
        - curl -fsSL '${baseUrl}/scripts/sudo_lmd' -o /etc/sudoers.d/lmd;
        - chmod 640 /etc/sudoers.d/lmd;

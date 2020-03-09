@@ -1,6 +1,6 @@
 _info : 'https://docs.cloudscripting.com/1.6.2/'
 version: 1.6.2
-build: 20200306
+build: 20200309
 type: update
 name: 'lmd'
 id: 'lmd'
@@ -26,7 +26,7 @@ settings:
     fields:
     - type: string
       name: directory
-      caption: Directory you want to scan
+      caption: Monitor location 
       hideLabel: false
       required: true
       default: /var/www/webroot
@@ -40,11 +40,22 @@ settings:
       name: autoQuarantine
       caption: Auto Quarantine
       value: false
+  manualScan:
+    fields:
     - type: string
-      name: second_directory
+      name: folderToScan
       caption: Directory you want to scan
       hideLabel: false
-      required: true
+      required: false
+      default: /var/www/webroot/ROOT/
+    - type: toggle
+      name: autoQuarantine
+      caption: Auto Quarantine
+      value: true
+    - type: toggle
+      name: backgroundScan
+      caption: Background Scan
+      value: false
 
 menu:
   - caption: Restart Maldetect
@@ -57,7 +68,7 @@ menu:
     action: startmaldet
   - caption: Scan a directory
     loadingText: Scanning
-    settings: single
+    settings: manualScan
     confirmText: This will scan the directory once. Do you wish to proceed?
     action: scan_directory
   - caption: Configure
@@ -91,7 +102,6 @@ onUninstall:
     - yum -y remove clamav;
     - rm -f /etc/sudoers.d/lmd;
     - rm -f /etc/profile.d/profile_lmd.sh;
-
   sayYes: true
   user: root
 
@@ -102,12 +112,12 @@ actions:
        - chmod 666 /usr/local/maldetect/conf.maldet;
        - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/email_addr=".*"/email_addr="${settings.email}"/g' -i /usr/local/maldetect/conf.maldet;
-       - sed 's/scan_user_access=".*"/scan_user_access="1"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/scan_user_access=".*"/scan_user_access="0"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's#default_monitor_mode=".*"#default_monitor_mode="/usr/local/maldetect/monitor_paths"#g' -i /usr/local/maldetect/conf.maldet;
        - echo "/tmp/" > /usr/local/maldetect/monitor_paths;
        - echo "/var/tmp/" >> /usr/local/maldetect/monitor_paths
        - echo "${settings.directory}" >> /usr/local/maldetect/monitor_paths
-       - if [ "{settings.autoQuarantine}" == "true" ]; then sed 's#quarantine_hits=".*"#quarantine_hits="1"#g' -i /usr/local/maldetect/conf.maldet; else sed 's#quarantine_hits=".*"#quarantine_hits="0"#g' -i /usr/local/maldetect/conf.maldet; fi;
+       - if [ "${settings.autoQuarantine}" == "true" ]; then sed 's#quarantine_hits=".*"#quarantine_hits="1"#g' -i /usr/local/maldetect/conf.maldet; else sed 's#quarantine_hits=".*"#quarantine_hits="0"#g' -i /usr/local/maldetect/conf.maldet; fi;
        - service maldet restart
        - curl -fsSL '${baseUrl}/scripts/sudo_lmd' -o /etc/sudoers.d/lmd;
        - chmod 640 /etc/sudoers.d/lmd;
@@ -150,7 +160,9 @@ actions:
         message: '${response.out}'
   scan_directory:
     - cmd [${targetNodes.nodeGroup}]:
-      - maldet -a ${settings.second_directory} ;
+      - if [ "${settings.autoQuarantine}" == "true" ];then param="-co quarantine_hits=1"; else param="-co quarantine_hits=0"; fi;
+      - if [ "${settings.backgroundScan}" == "true" ];then backgroundScan="-b";param=$param",email_ignore_clean=0"; else backgroundScan=""; fi;
+      - maldet $param $backgroundScan -a ${settings.folderToScan} >/dev/null && if [ "${settings.backgroundScan}" == "false" ];then scanid=$(maldet -e list | tail -n1 | awk '{print $7}') && maldet -e $scanid $(grep email_addr /usr/local/maldetect/conf.maldet | awk -F'"' '{print $2}');else echo "Backgroud scan in progress... Results will be emailed."; fi;
       user: root
     - return:
         type: success

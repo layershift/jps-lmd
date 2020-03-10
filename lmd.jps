@@ -112,6 +112,7 @@ actions:
        - chmod 666 /usr/local/maldetect/conf.maldet;
        - sed 's/email_alert=".*"/email_alert="1"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/email_addr=".*"/email_addr="${settings.email}"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/email_ignore_clean=".*"/email_ignore_clean="0"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/scan_user_access=".*"/scan_user_access="0"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's#default_monitor_mode=".*"#default_monitor_mode="/usr/local/maldetect/monitor_paths"#g' -i /usr/local/maldetect/conf.maldet;
        - echo "/tmp/" > /usr/local/maldetect/monitor_paths;
@@ -162,7 +163,8 @@ actions:
     - cmd [${targetNodes.nodeGroup}]:
       - if [ "${settings.autoQuarantine}" == "true" ];then param="-co quarantine_hits=1"; else param="-co quarantine_hits=0"; fi;
       - if [ "${settings.backgroundScan}" == "true" ];then backgroundScan="-b";param=$param",email_ignore_clean=0"; else backgroundScan=""; fi;
-      - maldet $param $backgroundScan -a ${settings.folderToScan} >/dev/null && if [ "${settings.backgroundScan}" == "false" ];then scanid=$(maldet -e list | tail -n1 | awk '{print $7}') && maldet -e $scanid $(grep email_addr /usr/local/maldetect/conf.maldet | awk -F'"' '{print $2}');else echo "Backgroud scan in progress... Results will be emailed."; fi;
+      - param=$param",scan_ignore_root=0";
+      - maldet $param $backgroundScan -a ${settings.folderToScan} >/dev/null && if [ "${settings.backgroundScan}" == "false" ];then scanid=$(maldet -e list | grep SCANID | head -n1 | awk '{print $7}') && maldet -e $scanid $(grep email_addr /usr/local/maldetect/conf.maldet | awk -F'"' '{print $2}');else echo "Backgroud scan in progress... Results will be emailed."; fi;
       user: root
     - return:
         type: success

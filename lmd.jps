@@ -46,16 +46,11 @@ settings:
       name: folderToScan
       caption: Directory you want to scan
       hideLabel: false
-      required: false
       default: /var/www/webroot/ROOT/
     - type: toggle
       name: autoQuarantine
       caption: Auto Quarantine
       value: true
-    - type: toggle
-      name: backgroundScan
-      caption: Background Scan
-      value: false
 
 menu:
   - caption: Restart Maldetect
@@ -67,7 +62,7 @@ menu:
     confirmText: Are you sure you wish to start Maldet?
     action: startmaldet
   - caption: Scan a directory
-    loadingText: Scanning
+    loadingText: Preparing scan..
     settings: manualScan
     confirmText: This will scan the directory once. Do you wish to proceed?
     action: scan_directory
@@ -102,6 +97,7 @@ onUninstall:
     - yum -y remove clamav;
     - rm -f /etc/sudoers.d/lmd;
     - rm -f /etc/profile.d/profile_lmd.sh;
+    - rm -f /var/log/nginx/lmd_event_log /var/log/httpd/lmd_event_log
   sayYes: true
   user: root
 
@@ -114,6 +110,7 @@ actions:
        - sed 's/email_addr=".*"/email_addr="${settings.email}"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/email_ignore_clean=".*"/email_ignore_clean="0"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's/scan_user_access=".*"/scan_user_access="0"/g' -i /usr/local/maldetect/conf.maldet;
+       - sed 's/scan_clamscan=".*"/scan_clamscan="0"/g' -i /usr/local/maldetect/conf.maldet;
        - sed 's#default_monitor_mode=".*"#default_monitor_mode="/usr/local/maldetect/monitor_paths"#g' -i /usr/local/maldetect/conf.maldet;
        - echo "/tmp/" > /usr/local/maldetect/monitor_paths;
        - echo "/var/tmp/" >> /usr/local/maldetect/monitor_paths
@@ -124,6 +121,11 @@ actions:
        - chmod 640 /etc/sudoers.d/lmd;
        - curl -fsSL '${baseUrl}/scripts/profile_jps-lmd' -o /etc/profile.d/profile_lmd.sh;
        - chmod +x /etc/profile.d/profile_lmd.sh;
+       - echo "${env.nodes.name} ${targetNodes.nodeType}" > /tmp/nodeName;
+       - case "${targetNodes.nodeType}" in
+         nginxphp) ln -f -s /usr/local/maldetect/logs/event_log /var/log/nginx/lmd_event_log;;
+         apache) ln -f -s /usr/local/maldetect/logs/event_log /var/log/httpd/lmd_event_log;;
+       - esac;
       sayYes: true
       user: root
     - if (response.out.indexOf("Issue") !== -1):
@@ -162,9 +164,8 @@ actions:
   scan_directory:
     - cmd [${targetNodes.nodeGroup}]:
       - if [ "${settings.autoQuarantine}" == "true" ];then param="-co quarantine_hits=1"; else param="-co quarantine_hits=0"; fi;
-      - if [ "${settings.backgroundScan}" == "true" ];then backgroundScan="-b";param=$param",email_ignore_clean=0"; else backgroundScan=""; fi;
-      - param=$param",scan_ignore_root=0";
-      - maldet $param $backgroundScan -a ${settings.folderToScan} >/dev/null && if [ "${settings.backgroundScan}" == "false" ];then scanid=$(maldet -e list | grep SCANID | head -n1 | awk '{print $7}') && maldet -e $scanid $(grep email_addr /usr/local/maldetect/conf.maldet | awk -F'"' '{print $2}');else echo "Backgroud scan in progress... Results will be emailed."; fi;
+      - param=$param",email_ignore_clean=0,scan_ignore_root=0,scan_clamscan=1";
+      - maldet $param -b -a ${settings.folderToScan} >/dev/null && echo "Backgroud scan in progress... Results will be emailed if malicious files are found. You can also check the logs menu for this node for scan details/progress (lmd_event_log)";
       user: root
     - return:
         type: success
